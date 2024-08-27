@@ -17,6 +17,7 @@ export default async function handler(
   switch (method) {
     case 'POST':
       const segment_id = body["segment_id"] || null;
+      const interval = body["interval"] || null;
       if (segment_id) {
         const token = await getStravaToken();
         const dataEndpoint = `segments/${segment_id}`;
@@ -41,7 +42,8 @@ export default async function handler(
         }
         await createItem('/items/strava_segments_efforts', effortData);
       } else {
-        const url = '/items/strava_segments?filter={ "status": { "_eq": "published" }}'
+        const filter = interval ? `{ "interval": { "_eq": "${interval}" }}` : `{ "status": { "_eq": "published" }}`;
+        const url = `/items/strava_segments?filter=${filter}`
         const { data } = await getItem(url);
         await data.reduce(async (lastPromise: any, item: any) => {
           const { segment_id } = item;

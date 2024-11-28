@@ -39,6 +39,7 @@ export default async function handler(
           const current_date = Date.now();
           effortData['effort_count_interval'] = effort_count - last_effort_count;
           effortData['interval'] = Math.floor((current_date - last_date) / 1000);
+          effortData['day'] = new Date().getDay();
         }
         await createItem('/items/strava_segments_efforts', effortData);
       } else {

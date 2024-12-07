@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as cheerio from 'cheerio';
 import type { NextApiRequest, NextApiResponse } from "next";
 import getConfig from 'next/config';
 import { getItem, createItem } from "../../../../lib/directus";
@@ -19,11 +20,26 @@ export default async function handler(
       const segment_id = body["segment_id"] || null;
       const interval = body["interval"] || null;
       if (segment_id) {
-        const token = await getStravaToken();
-        const dataEndpoint = `segments/${segment_id}`;
-        const itemData = await getStravaData(dataEndpoint, token);
-        const { effort_count, name, city } = itemData;
-        const weatherData = await getWeatherData(itemData);
+        const { name, city, source } = body;
+        let effort_count;
+        let start_latlng = body.start_latlng;
+        if (source === 'api') {
+          const token = await getStravaToken();
+          const dataEndpoint = `segments/${segment_id}`;
+          const itemData = await getStravaData(dataEndpoint, token);
+          effort_count = itemData.effort_count;
+          start_latlng = itemData.start_latlng;
+        } else {
+          const url = `https://www.strava.com/segments/${segment_id}`;
+          const { data } = await axios.get(url);
+          const $ = cheerio.load(data);
+          const attempts = $('div.stat.attempts span.stat-subtext').text();
+          const match = attempts.match(/^[^\s]+/);
+          if (match && match[0]) {
+            effort_count = parseInt(match[0].replace(',', ''));
+          }
+        }
+        const weatherData = await getWeatherData(start_latlng);
         const effortData = {
           ...weatherData,
           segment_id,
@@ -47,13 +63,17 @@ export default async function handler(
         const url = `/items/strava_segments?filter=${filter}`
         const { data } = await getItem(url);
         await data.reduce(async (lastPromise: any, item: any) => {
-          const { segment_id } = item;
+          const { segment_id, name, city, source, start_latlng } = item;
           const accum: any = await lastPromise;
-          const res = await axios({
+          await axios({
             method: 'post',
             url: directusFlowsTriggerWebhook,
             data: {
               segment_id,
+              name,
+              city,
+              source,
+              start_latlng,
             },
           });
           return [...accum, {}];

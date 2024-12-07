@@ -15,7 +15,7 @@ export async function updateSegment(options: any, itemData: any) {
   const { 
     name, activity_type, distance, average_grade, maximum_grade, elevation_high, elevation_low,
     climb_category, city, state, country, created_at, updated_at, 
-    total_elevation_gain, effort_count, athlete_count, geojson 
+    total_elevation_gain, effort_count, athlete_count, geojson, start_latlng,
   } = itemData;
 
   const data = {
@@ -34,6 +34,7 @@ export async function updateSegment(options: any, itemData: any) {
     updated_at,
     total_elevation_gain, effort_count, athlete_count,
     geojson,
+    start_latlng,
   }
   const res = await instance.patch(url, data);
   if (res.status !== 200) {

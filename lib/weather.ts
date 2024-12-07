@@ -2,9 +2,7 @@ import axios from 'axios';
 
 const baseUrl = "https://api.open-meteo.com/v1/forecast";
 
-export async function getWeatherData(data: any) {
-  const { start_latlng } = data;
-
+export async function getWeatherData(start_latlng: any) {
   const date = new Date();
   const formattedDate = new Intl.DateTimeFormat("de-DE", {
     year: "numeric",

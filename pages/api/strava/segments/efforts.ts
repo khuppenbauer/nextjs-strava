@@ -20,7 +20,7 @@ export default async function handler(
       const segment_id = body["segment_id"] || null;
       const interval = body["interval"] || null;
       if (segment_id) {
-        const { name, city, source } = body;
+        const { name, city, source, activity_type } = body;
         let effort_count;
         let start_latlng = body.start_latlng;
         if (source === 'api') {
@@ -46,6 +46,7 @@ export default async function handler(
           effort_count,
           name,
           city,
+          activity_type,
         }
         const url = `/items/strava_segments_efforts?filter={ "segment_id": { "_eq": "${segment_id}" }}&sort=-date_created&limit=1`
         const { data } = await getItem(url);
@@ -63,7 +64,7 @@ export default async function handler(
         const url = `/items/strava_segments?filter=${filter}`
         const { data } = await getItem(url);
         await data.reduce(async (lastPromise: any, item: any) => {
-          const { segment_id, name, city, source, start_latlng } = item;
+          const { segment_id, name, city, source, start_latlng, activity_type } = item;
           const accum: any = await lastPromise;
           await axios({
             method: 'post',
@@ -74,6 +75,7 @@ export default async function handler(
               city,
               source,
               start_latlng,
+              activity_type,
             },
           });
           return [...accum, {}];
